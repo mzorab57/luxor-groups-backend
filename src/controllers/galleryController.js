@@ -1,117 +1,34 @@
-const express = require("express");
-const router = express.Router();
 const Gallery = require("../models/gallery");
-const multer = require("multer");
-const path = require("path");
-
-// Configure storage
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/"); // Make sure this folder exists
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + "-" + file.originalname);
-  },
-});
-const upload = multer({ storage: storage });
 
 const galleryController = {
   // Create new gallery
-  async create(req, res) {
-    try {
-      const imagePaths = req.files ? req.files.map(file => '/uploads/' + file.filename) : [];
-      const {
-        qr_code,
-        title,
-        description,
-        category,
-        size,
-        price,
-        sku,
-        orientation,
-        artist_name,
-        upload_date,
-      } = req.body;
-      const data = {
-        images: imagePaths,
-        qr_code,
-        title,
-        description,
-        category,
-        size,
-        price,
-        sku,
-        orientation,
-        artist_name,
-        upload_date,
-      };
-      console.log("Gallery data to save:", data); // <--- Add this line
-      const galleryItem = await Gallery.create(data);
-      res.status(201).json(galleryItem);
-    } catch (err) {
-      console.error("Gallery create error:", err); // <--- Add this line
-      res.status(500).json({ error: err.message });
-    }
-  },
-
-  // Get all gallerys
-  async getAll(req, res) {
-    try {
-      const gallerys = await Gallery.getAll();
-      res.json(gallerys);
-      console.log(gallerys);
-      console.log("gallerys");
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-
-  // Get gallery by ID
-  async getById(req, res) {
-    try {
-      const { id } = req.params;
-      const galleryItem = await Gallery.getById(id);
-      if (!galleryItem)
-        return res.status(404).json({ error: "gallery not found" });
-      res.json(galleryItem);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-
-  // Update gallery by ID
-  async update(req, res) {
-    try {
-      const { id } = req.params;
-      const data = req.body;
-      const updated = await Gallery.update(id, data);
-      res.json(updated);
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-
-  // Delete gallery by ID
-  async delete(req, res) {
-    try {
-      const { id } = req.params;
-      console.log(id);
-
-      await Gallery.delete(id);
-      res.json({ message: "gallery deleted", id });
-    } catch (err) {
-      res.status(500).json({ error: err.message });
-    }
-  },
-};
-
-module.exports = galleryController;
-
-// In your route file
-router.post("/api/gallery", upload.array("images", 10), async (req, res) => {
+ async create(req, res) {
   try {
-    const imagePaths = req.files.map((file) => "/uploads/" + file.filename);
-    // Get other fields from req.body
+    console.log("Files received:", req.files);
+    console.log("Body received:", req.body);
+    
+    let imagePaths = [];
+    
+    // Check if files are uploaded via form-data
+    if (req.files && req.files.length > 0) {
+      imagePaths = req.files.map(file => '/uploads/' + file.filename);
+      console.log("Images from uploaded files:", imagePaths);
+    }
+    // Check if images are sent as URLs in the request body
+    else if (req.body.images) {
+      if (typeof req.body.images === 'string') {
+        // Single image URL
+        imagePaths = [req.body.images];
+        console.log("Single image URL:", imagePaths);
+      } else if (Array.isArray(req.body.images)) {
+        // Array of image URLs
+        imagePaths = req.body.images;
+        console.log("Array of image URLs:", imagePaths);
+      }
+    }
+    
+    console.log("Final imagePaths:", imagePaths);
+    
     const {
       qr_code,
       title,
@@ -124,8 +41,8 @@ router.post("/api/gallery", upload.array("images", 10), async (req, res) => {
       artist_name,
       upload_date,
     } = req.body;
-    // Save to DB (adjust to your model)
-    const newGallery = await Gallery.create({
+    
+    const data = {
       images: imagePaths,
       qr_code,
       title,
@@ -137,9 +54,92 @@ router.post("/api/gallery", upload.array("images", 10), async (req, res) => {
       orientation,
       artist_name,
       upload_date,
-    });
-    res.status(201).json(newGallery);
+    };
+    
+    console.log("Gallery data to save:", data);
+    
+    const galleryItem = await Gallery.create(data);
+    res.status(201).json(galleryItem);
   } catch (err) {
+    console.error("Gallery create error:", err);
     res.status(500).json({ error: err.message });
   }
-});
+},
+
+
+
+
+  // Get all galleries
+  async getAll(req, res) {
+    try {
+      const galleries = await Gallery.getAll();
+      
+      // Parse the images JSON string back to array for each gallery item
+      const galleriesWithParsedImages = galleries.map(gallery => ({
+        ...gallery,
+        images: typeof gallery.images === 'string' ? JSON.parse(gallery.images) : gallery.images
+      }));
+      
+      res.json(galleriesWithParsedImages);
+      console.log("Galleries fetched:", galleriesWithParsedImages);
+    } catch (err) {
+      console.error("Get all galleries error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  // Get gallery by ID
+  async getById(req, res) {
+    try {
+      const { id } = req.params;
+      const galleryItem = await Gallery.getById(id);
+      
+      if (!galleryItem) {
+        return res.status(404).json({ error: "Gallery not found" });
+      }
+      
+      // Parse the images JSON string back to array
+      const galleryWithParsedImages = {
+        ...galleryItem,
+        images: typeof galleryItem.images === 'string' ? JSON.parse(galleryItem.images) : galleryItem.images
+      };
+      
+      res.json(galleryWithParsedImages);
+    } catch (err) {
+      console.error("Get gallery by ID error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  // Update gallery by ID
+  async update(req, res) {
+    try {
+      const { id } = req.params;
+      const data = req.body;
+      
+      console.log("Update data:", data);
+      
+      const updated = await Gallery.update(id, data);
+      res.json(updated);
+    } catch (err) {
+      console.error("Update gallery error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
+
+  // Delete gallery by ID
+  async delete(req, res) {
+    try {
+      const { id } = req.params;
+      console.log("Deleting gallery with ID:", id);
+
+      await Gallery.delete(id);
+      res.json({ message: "Gallery deleted successfully", id });
+    } catch (err) {
+      console.error("Delete gallery error:", err);
+      res.status(500).json({ error: err.message });
+    }
+  },
+};
+
+module.exports = galleryController;

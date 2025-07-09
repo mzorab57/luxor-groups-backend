@@ -20,12 +20,14 @@ class Gallery {
         data.upload_date || null,
       ]
     );
+    console.log("Insert result:", result);
     return { id: result.insertId, ...data };
   }
 
   // Get all images
   static async getAll() {
     const [rows] = await pool.execute("SELECT * FROM gallery");
+    console.log("rows");
     console.log(rows);
 
     return rows;

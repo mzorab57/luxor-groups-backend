@@ -15,8 +15,19 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage: storage });
 
-// Create image
-router.post("/", upload.array("images", 10), galleryController.create);
+// Middleware to handle both form-data and JSON
+const handleUpload = (req, res, next) => {
+  // Check if it's form-data with files
+  if (req.is('multipart/form-data')) {
+    upload.array("images", 10)(req, res, next);
+  } else {
+    // For JSON requests, just continue
+    next();
+  }
+};
+
+// Create image - supports both file upload and URL
+router.post("/", handleUpload, galleryController.create);
 // Get all images
 router.get("/", galleryController.getAll);
 // Get image by ID
