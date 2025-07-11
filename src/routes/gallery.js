@@ -37,4 +37,4 @@ router.put("/:id", galleryController.update);
 // Delete image by ID
 router.delete("/:id", galleryController.delete);
 
-module.exports = router;
+module.exports = router;

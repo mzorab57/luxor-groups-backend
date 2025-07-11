@@ -42,7 +42,7 @@ const galleryController = {
       upload_date,
     } = req.body;
     
-    const data = {
+ const data = {
       images: imagePaths,
       qr_code,
       title,
@@ -87,7 +87,6 @@ const galleryController = {
       res.status(500).json({ error: err.message });
     }
   },
-
   // Get gallery by ID
   async getById(req, res) {
     try {

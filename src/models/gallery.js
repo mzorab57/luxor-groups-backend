@@ -46,18 +46,18 @@ class Gallery {
     await pool.execute(
       `UPDATE gallery SET images=?, qr_code=?, title=?, description=?, category=?, size=?, price=?, sku=?, orientation=?, artist_name=?, upload_date=? WHERE id=?`,
       [
-        JSON.stringify(data.images),
-        data.qr_code || null,
-        data.title,
-        data.description,
-        data.category,
-        data.size,
-        data.price,
-        data.sku,
-        data.orientation,
-        data.artist_name || null,
-        data.upload_date || null,
-        id,
+      JSON.stringify(data.images),
+      data.qr_code || null,
+      data.title,
+      data.description,
+      data.category,
+      data.size,
+      data.price,
+      data.sku,
+      data.orientation,
+      data.artist_name || null,
+      data.upload_date || null,
+      id,
       ]
     );
     return { id, ...data };
