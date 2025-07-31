@@ -12,9 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 // Database Connection
 $host = 'localhost';
-$db   = 'luxor_groups';
-$user = 'root';
-$pass = '';
+// $db   = 'luxor_groups';
+$db   = 'u553518022_luxor_groups';
+// $user = 'root';
+$user = 'u553518022_root';
+// $pass = '';
+$pass = '123Kalar321@';
 $charset = 'utf8mb4';
 
 $dsn = "mysql:host=$host;dbname=$db;charset=$charset";
@@ -24,6 +27,7 @@ $options = [
     PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
     PDO::ATTR_EMULATE_PREPARES   => false,
 ];
+
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
